@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     SECRET_KEY: str
 
     class Config:
-        env_file = ".env"
+        env_file = "env/.env"
         case_sensitive = True
 
 # Cache settings (important for performance)
