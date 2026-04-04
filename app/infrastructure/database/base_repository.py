@@ -34,6 +34,25 @@ class BaseRepository(Generic[T]):
             self.db.delete(obj)
             self.db.commit()
         return obj
+    
+    # ✅ Update
+    def update(self, id: int, data: dict):
+        obj = self.get_by_id(id)
+
+        if not obj:
+            return None
+            
+        if hasattr(data, "dict"):
+            data = data.dict()
+                
+        for key, value in data.items():
+            if value is not None:   # 🔥 avoid null overwrite
+                setattr(obj, key, value)
+
+        self.db.commit()
+        self.db.refresh(obj)
+
+        return obj
 
     # ✅ Generic Pagination + Search + Sort
     def get_paginated(
