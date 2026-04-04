@@ -1,5 +1,8 @@
+from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from app.core.status import HTTPStatus
+
+
 class Response:
     @staticmethod
     def success(data=None, message="Success", status_code=HTTPStatus.SUCCESS):
@@ -8,7 +11,7 @@ class Response:
             content={
                 "message": message,
                 "status": "success",
-                "data": data
+                "data": jsonable_encoder(data)
             }
         )
 
@@ -19,6 +22,6 @@ class Response:
             content={
                 "message": message,
                 "status": "error",
-                "data": data
+                "data": jsonable_encoder(data)
             }
         )

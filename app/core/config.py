@@ -6,6 +6,8 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     PORT: int = 8000
     DATABASE_URL: str
+    DB_POOL_SIZE: int = 10
+    DB_MAX_OVERFLOW: int = 20
     SECRET_KEY: str
 
     class Config:
@@ -16,3 +18,5 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings():
     return Settings()
+
+settings = get_settings()

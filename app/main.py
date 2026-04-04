@@ -7,7 +7,7 @@ from app.core.exceptions import (
     global_exception_handler
 )
 
-from app.api.index import router
+from app.api.api import router
 
 app = FastAPI()
 # register handlers
