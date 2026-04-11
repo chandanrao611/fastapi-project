@@ -136,7 +136,7 @@ Database
 ### Upload Users CSV
 
 ```http
-POST /users/bulk-upload
+POST /users/upload
 ```
 
 ### Request:
