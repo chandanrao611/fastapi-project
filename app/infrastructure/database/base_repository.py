@@ -1,7 +1,7 @@
 from typing import Type, Generic, TypeVar, List, Tuple, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import asc, desc
-
+from sqlalchemy.dialects.postgresql import insert
 T = TypeVar("T")
 
 
@@ -91,3 +91,17 @@ class BaseRepository(Generic[T]):
         data = query.offset(skip).limit(size).all()
 
         return data, total
+
+    # Insert bulk data in batches and return count of inserted and duplicate users
+    def _insert_batch(self, batch, unique_field: str = "email") -> Tuple[int, List[str]]:
+        stmt = insert(self.model).values(batch)
+        # 🔥 Avoid duplicates at DB level
+        stmt = stmt.on_conflict_do_nothing(index_elements=[unique_field])
+        result = self.db.execute(stmt)
+        self.db.commit()
+        inserted_count = result.rowcount
+        # duplicates = batch size - inserted
+        duplicate_count = len(batch) - inserted_count
+        duplicates = [row[unique_field] for row in batch][:duplicate_count]
+
+        return inserted_count, duplicates

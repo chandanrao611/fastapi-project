@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, UploadFile, File
 from app.api.deps import get_service
 from app.services.user_service import UserService
 from app.repositories.user_repository import UserRepository
@@ -29,3 +29,8 @@ def createUser(user_data: UserCreate, service: UserService = Depends(get_service
 def updateUser(user_data: UserUpdate, user_id: int = Query(..., gt=0, description="User ID must be positive"), service: UserService = Depends(get_service(UserService, UserRepository))):
     data = service.update_user(user_id, user_data)
     return Response.success(data, "User updated successfully")
+
+@router.post("/upload", response_model=ResponseModel[UserResponse])
+def uploadCsv(file: UploadFile = File(...), service: UserService = Depends(get_service(UserService, UserRepository))):
+    data = service.bulk_upload_users(file)
+    return Response.success(data, "Users uploaded successfully")

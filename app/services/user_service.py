@@ -7,6 +7,7 @@ from app.schemas.user import UserResponse, UserCreate, UserUpdate
 from app.utils.helper import map_to_schema, validate_password, validate_email, validate_mobile
 from app.core.security import hash_password
 from app.core.status import HTTPStatus
+from app.services.file_service import FileService
 
 class UserService:
     def __init__(self, repo: UserRepository):
@@ -91,3 +92,48 @@ class UserService:
             
         user = self.repo.update(user_id, user_data.model_dump(exclude_unset=True))
         return UserResponse.model_validate(user)
+    
+    def bulk_upload_users(self, file):
+        total_rows = FileService.count_rows_binary(file)
+        users_stream = FileService.read_file(file)
+        
+        existing_emails = set(user.email for user in self.repo.db.query(User.email).all())
+        
+        inserted_users_count = 0
+        duplicate_users = []
+
+        batch = []
+        BATCH_SIZE = 500
+        # Process users in batches to optimize DB inserts
+        for row in users_stream:
+            try:
+                row["email"] = self._validate_and_process_email(row["email"])
+                if "mobile" in row and row["mobile"]:
+                    row["mobile"] = self._validate_mobile(row["mobile"])
+                if "password" in row and row["password"]:
+                    row["password"] = self._validate_and_process_password(row["password"])
+                
+                batch.append(row)
+                # Insert batch
+                if len(batch) == BATCH_SIZE:
+                    inserted, duplicates = self.repo._insert_batch(batch, unique_field="email")
+                    inserted_users_count += inserted
+                    duplicate_users.extend(duplicates)
+                    batch.clear()
+
+            except Exception as e:
+                print(f"Error processing row: {e}")
+                continue
+
+
+        # Insert remaining
+        if batch:
+            inserted, duplicates = self.repo._insert_batch(batch, unique_field="email")
+            inserted_users_count += inserted
+            duplicate_users.extend(duplicates)
+
+        return {
+            "inserted": inserted_users_count,
+            "skipped": total_rows - inserted_users_count,
+            "duplicate_users": duplicate_users
+        }

@@ -1,5 +1,8 @@
 import re
 EMAIL_REGEX = r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$"
+EXPECTED_HEADERS = {
+    "USER": ['first_name', 'last_name', 'mobile', 'email', 'password']
+}
 
 def map_to_schema(schema, data):
     return [schema.model_validate(item) for item in data]
@@ -36,3 +39,7 @@ def validate_mobile(data: int):
     if not str(data).isdigit():
         return "Mobile number must contain only digits"
     return None
+
+def expected_headers(header_for):
+    print(f"Proposal headers: {header_for}")
+    return EXPECTED_HEADERS[header_for]
